@@ -1,0 +1,27 @@
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Output H5P / ZIP files
+*.zip
+*.h5p
+content.json
+images/
+
+# Temporary and test spreadsheets
+*.ods
+*.xlsx
+*.xls
+*.csv
+!Inventario CEP Las Palmas Completo.ods
+
+# OS files
+Thumbs.db
+EHthumbs.db
+Desktop.ini
+.DS_Store
