@@ -29,58 +29,74 @@
       <span class="badge" id="app-badge-version">v1.2.0</span>
     </header>
 
-    <!-- Main Grid Layout -->
-    <main class="main-layout">
-      
+      <!-- Tab Switcher -->
+      <div class="tabs-container" style="grid-column: 1 / -1;">
+        <button class="tab-btn active" id="tab-excel-h5p" type="button">📊 Excel / ODS ➔ H5P</button>
+        <button class="tab-btn" id="tab-h5p-excel" type="button">📦 H5P ➔ Excel / ODS</button>
+      </div>
+
       <!-- Left Column: Settings and Sidebar Controls -->
       <section class="sidebar glass-panel" id="settings-sidebar">
-        <h2>🛠️ Ajustes Generales</h2>
-        
-        <!-- API Configuration -->
-        <div class="form-group">
-          <div class="flex justify-between items-center">
-            <label for="enable-pixabay">Ilustraciones de Pixabay</label>
-            <input type="checkbox" id="enable-pixabay" checked>
-          </div>
-          <p class="settings-description">Busca imágenes automáticamente en Pixabay basadas en el nombre del elemento.</p>
-        </div>
-
-        <div id="pixabay-settings" class="flex flex-col">
+        <div id="settings-excel-h5p">
+          <h2>🛠️ Ajustes Generales</h2>
+          
+          <!-- API Configuration -->
           <div class="form-group">
-            <label for="api-key">Clave de API de Pixabay <span>*</span></label>
-            <div class="input-with-button">
-              <input type="password" id="api-key" class="form-control" placeholder="Clave de API de Pixabay">
-              <button class="btn btn-secondary btn-icon-only" id="save-api-key-btn" title="Guardar clave localmente" type="button">💾</button>
+            <div class="flex justify-between items-center">
+              <label for="enable-pixabay">Ilustraciones de Pixabay</label>
+              <input type="checkbox" id="enable-pixabay" checked>
             </div>
-            <p class="settings-description">La clave se guarda localmente en tu navegador de forma segura.</p>
+            <p class="settings-description">Busca imágenes automáticamente en Pixabay basadas en el nombre del elemento.</p>
+          </div>
+
+          <div id="pixabay-settings" class="flex flex-col">
+            <div class="form-group">
+              <label for="api-key">Clave de API de Pixabay <span>*</span></label>
+              <div class="input-with-button">
+                <input type="password" id="api-key" class="form-control" placeholder="Clave de API de Pixabay">
+                <button class="btn btn-secondary btn-icon-only" id="save-api-key-btn" title="Guardar clave localmente" type="button">💾</button>
+              </div>
+              <p class="settings-description">La clave se guarda localmente en tu navegador de forma segura.</p>
+            </div>
+
+            <div class="form-group">
+              <label for="query-lang">Idioma de Búsqueda Pixabay</label>
+              <select id="query-lang" class="form-control">
+                <option value="es" selected>Español (es)</option>
+                <option value="en">Inglés (en)</option>
+                <option value="fr">Francés (fr)</option>
+                <option value="de">Alemán (de)</option>
+              </select>
+            </div>
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 0.5rem 0 1.5rem 0;">
+
+          <!-- H5P Metadata -->
+          <h2>📦 Configuración H5P</h2>
+          
+          <div class="form-group">
+            <label for="infowall-title">Título del Catálogo H5P</label>
+            <input type="text" id="infowall-title" class="form-control" value="Catálogo de Actividades" placeholder="Ej. Inventario del CEP">
+            <p class="settings-description">Se mostrará como cabecera principal en la actividad H5P.</p>
           </div>
 
           <div class="form-group">
-            <label for="query-lang">Idioma de Búsqueda Pixabay</label>
-            <select id="query-lang" class="form-control">
-              <option value="es" selected>Español (es)</option>
-              <option value="en">Inglés (en)</option>
-              <option value="fr">Francés (fr)</option>
-              <option value="de">Alemán (de)</option>
-            </select>
+            <label for="h5p-lang">Idioma del Paquete H5P</label>
+            <input type="text" id="h5p-lang" class="form-control" value="es" placeholder="Ej. es, en, fr">
+            <p class="settings-description">Código ISO de idioma del paquete de metadatos.</p>
           </div>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 0.5rem 0 1.5rem 0;">
-
-        <!-- H5P Metadata -->
-        <h2>📦 Configuración H5P</h2>
-        
-        <div class="form-group">
-          <label for="infowall-title">Título del Catálogo H5P</label>
-          <input type="text" id="infowall-title" class="form-control" value="Catálogo de Actividades" placeholder="Ej. Inventario del CEP">
-          <p class="settings-description">Se mostrará como cabecera principal en la actividad H5P.</p>
-        </div>
-
-        <div class="form-group">
-          <label for="h5p-lang">Idioma del Paquete H5P</label>
-          <input type="text" id="h5p-lang" class="form-control" value="es" placeholder="Ej. es, en, fr">
-          <p class="settings-description">Código ISO de idioma del paquete de metadatos.</p>
+        <!-- Information sidebar for H5P to Excel mode (initially hidden) -->
+        <div id="settings-h5p-excel" class="hidden">
+          <h2>📦 Extracción H5P</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
+            Esta utilidad te permite extraer y reconstruir la hoja de cálculo original a partir de cualquier actividad **H5P InfoWall** (.h5p) o archivo de datos **content.json**.
+          </p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem;">
+            El descompilador analizará las propiedades del catálogo H5P y las convertirá en las columnas de una nueva hoja de cálculo, extrayendo incluso los enlaces directos (URLs) incrustados en las descripciones.
+          </p>
         </div>
 
         <div style="margin-top: 1.5rem; padding: 1rem; border-radius: var(--radius-sm); background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.15);">
@@ -93,85 +109,162 @@
       <!-- Right Column: Interactive Workspace -->
       <section class="workspace flex flex-col gap-sm" style="gap: 2rem;">
         
-        <!-- Step 1: Upload File -->
-        <article class="glass-panel">
-          <div class="step-header">
-            <div class="step-title">
-              <div class="step-number">1</div>
-              <h2>Carga de Inventario</h2>
-            </div>
-            <a href="https://github.com/nmarafo/H5PBrowser#readme" target="_blank" class="help-link">Ayuda ❓</a>
-          </div>
-
-          <div style="margin-top: 1.5rem;">
-            <!-- Drag and drop zone -->
-            <div class="upload-zone" id="upload-zone">
-              <div class="upload-icon">📁</div>
-              <div class="upload-text">
-                <h3>Arrastra y suelta tu hoja de cálculo aquí</h3>
-                <p>Formatos admitidos: OpenDocument (.ods), Excel (.xlsx, .xls), Texto (.csv)</p>
+        <!-- Tab 1 Workspace Content -->
+        <div id="panel-excel-h5p" class="flex flex-col" style="gap: 2rem;">
+          <!-- Step 1: Upload File -->
+          <article class="glass-panel">
+            <div class="step-header">
+              <div class="step-title">
+                <div class="step-number">1</div>
+                <h2>Carga de Inventario</h2>
               </div>
-              <input type="file" id="file-input" accept=".ods,.xlsx,.xls,.csv">
-              <button class="btn btn-primary" type="button" onclick="document.getElementById('file-input').click()">Examinar Archivo</button>
+              <a href="https://github.com/nmarafo/H5PBrowser#readme" target="_blank" class="help-link">Ayuda ❓</a>
             </div>
 
-            <!-- File details box (initially hidden) -->
-            <div class="file-info-box hidden" id="file-info-box">
-              <div class="file-info-details">
-                <div class="file-icon">📊</div>
-                <div class="file-meta">
-                  <h4 id="file-name">Inventario.ods</h4>
-                  <p id="file-size">1.2 MB</p>
+            <div style="margin-top: 1.5rem;">
+              <!-- Drag and drop zone -->
+              <div class="upload-zone" id="upload-zone">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">
+                  <h3>Arrastra y suelta tu hoja de cálculo aquí</h3>
+                  <p>Formatos admitidos: OpenDocument (.ods), Excel (.xlsx, .xls), Texto (.csv)</p>
                 </div>
+                <input type="file" id="file-input" accept=".ods,.xlsx,.xls,.csv">
+                <button class="btn btn-primary" type="button" onclick="document.getElementById('file-input').click()">Examinar Archivo</button>
               </div>
-              <button class="btn btn-secondary" id="remove-file-btn" type="button">Cambiar Archivo</button>
+
+              <!-- File details box (initially hidden) -->
+              <div class="file-info-box hidden" id="file-info-box">
+                <div class="file-info-details">
+                  <div class="file-icon">📊</div>
+                  <div class="file-meta">
+                    <h4 id="file-name">Inventario.ods</h4>
+                    <p id="file-size">1.2 MB</p>
+                  </div>
+                </div>
+                <button class="btn btn-secondary" id="remove-file-btn" type="button">Cambiar Archivo</button>
+              </div>
             </div>
-          </div>
-        </article>
+          </article>
 
-        <!-- Step 2: Mapping columns (initially hidden) -->
-        <article class="glass-panel hidden" id="setup-step">
-          <div class="step-header">
-            <div class="step-title">
-              <div class="step-number">2</div>
-              <h2>Mapeo de Columnas e Inventario</h2>
-            </div>
-          </div>
-
-          <div class="workspace-step">
-            <!-- Worksheet Selection -->
-            <div class="form-group" style="max-width: 400px; margin-top: 0.5rem;">
-              <label for="sheet-select">Selecciona la Hoja a Procesar</label>
-              <select id="sheet-select" class="form-control"></select>
-            </div>
-
-            <!-- Mappings Description -->
-            <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
-              Asocia las columnas de tu hoja de cálculo con los campos requeridos por la plantilla de H5P InfoWall. La aplicación intentará pre-mapear las columnas más obvias de forma inteligente.
-            </p>
-
-            <!-- Columns Mapping Grid -->
-            <div class="mappings-container" id="mappings-grid"></div>
-
-            <!-- Visual Preview Section -->
-            <div class="preview-table-container hidden" id="preview-table-container">
-              <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--secondary); display: flex; align-items: center; gap: 0.5rem;">
-                👁️ Vista Previa del Mapeo (Primeras 5 Filas)
-              </h3>
-              <table class="preview-table">
-                <thead>
-                  <tr id="preview-table-header"></tr>
-                </thead>
-                <tbody id="preview-table-body"></tbody>
-              </table>
+          <!-- Step 2: Mapping columns (initially hidden) -->
+          <article class="glass-panel hidden" id="setup-step">
+            <div class="step-header">
+              <div class="step-title">
+                <div class="step-number">2</div>
+                <h2>Mapeo de Columnas e Inventario</h2>
+              </div>
             </div>
 
-            <!-- Generate Buttons -->
-            <div class="actions-footer">
-              <button class="btn btn-primary" id="generate-btn" type="button" disabled>⚡ Generar H5P</button>
+            <div class="workspace-step">
+              <!-- Worksheet Selection -->
+              <div class="form-group" style="max-width: 400px; margin-top: 0.5rem;">
+                <label for="sheet-select">Selecciona la Hoja a Procesar</label>
+                <select id="sheet-select" class="form-control"></select>
+              </div>
+
+              <!-- Mappings Description -->
+              <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+                Asocia las columnas de tu hoja de cálculo con los campos requeridos por la plantilla de H5P InfoWall. La aplicación intentará pre-mapear las columnas más obvias de forma inteligente.
+              </p>
+
+              <!-- Columns Mapping Grid -->
+              <div class="mappings-container" id="mappings-grid"></div>
+
+              <!-- Visual Preview Section -->
+              <div class="preview-table-container hidden" id="preview-table-container">
+                <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--secondary); display: flex; align-items: center; gap: 0.5rem;">
+                  👁️ Vista Previa del Mapeo (Primeras 5 Filas)
+                </h3>
+                <table class="preview-table">
+                  <thead>
+                    <tr id="preview-table-header"></tr>
+                  </thead>
+                  <tbody id="preview-table-body"></tbody>
+                </table>
+              </div>
+
+              <!-- Generate Buttons -->
+              <div class="actions-footer">
+                <button class="btn btn-primary" id="generate-btn" type="button" disabled>⚡ Generar H5P</button>
+              </div>
             </div>
-          </div>
-        </article>
+          </article>
+        </div>
+
+        <!-- Tab 2 Workspace Content (H5P to Excel) -->
+        <div id="panel-h5p-excel" class="flex flex-col hidden" style="gap: 2rem;">
+          <!-- Step 1: Upload H5P / content.json -->
+          <article class="glass-panel">
+            <div class="step-header">
+              <div class="step-title">
+                <div class="step-number">1</div>
+                <h2>Carga de Archivo H5P o content.json</h2>
+              </div>
+            </div>
+
+            <div style="margin-top: 1.5rem;">
+              <!-- Drag and drop zone -->
+              <div class="upload-zone" id="h5p-upload-zone">
+                <div class="upload-icon">📦</div>
+                <div class="upload-text">
+                  <h3>Arrastra y suelta tu archivo .h5p o content.json aquí</h3>
+                  <p>Formatos admitidos: H5P (.h5p) o archivo de configuración H5P (.json)</p>
+                </div>
+                <input type="file" id="h5p-file-input" accept=".h5p,.json">
+                <button class="btn btn-primary" type="button" onclick="document.getElementById('h5p-file-input').click()">Examinar Archivo</button>
+              </div>
+
+              <!-- H5P File details box (initially hidden) -->
+              <div class="file-info-box hidden" id="h5p-file-info-box">
+                <div class="file-info-details">
+                  <div class="file-icon">📦</div>
+                  <div class="file-meta">
+                    <h4 id="h5p-file-name">actividades.h5p</h4>
+                    <p id="h5p-file-size">1.2 MB</p>
+                  </div>
+                </div>
+                <button class="btn btn-secondary" id="h5p-remove-file-btn" type="button">Cambiar Archivo</button>
+              </div>
+            </div>
+          </article>
+
+          <!-- Step 2: H5P Preview and Download -->
+          <article class="glass-panel hidden" id="h5p-preview-step">
+            <div class="step-header">
+              <div class="step-title">
+                <div class="step-number">2</div>
+                <h2>Contenido Extraído del H5P</h2>
+              </div>
+            </div>
+
+            <div class="workspace-step">
+              <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+                Se han extraído con éxito los elementos del catálogo H5P InfoWall. Revisa la vista previa de las columnas y filas recuperadas a continuación.
+              </p>
+
+              <!-- Preview Table -->
+              <div class="preview-table-container" id="h5p-preview-table-container">
+                <table class="preview-table">
+                  <thead>
+                    <tr id="h5p-preview-table-header"></tr>
+                  </thead>
+                  <tbody id="h5p-preview-table-body"></tbody>
+                </table>
+              </div>
+
+              <!-- Export Buttons -->
+              <div class="actions-footer">
+                <button class="btn btn-primary" id="download-excel-btn" type="button">
+                  📊 Descargar Excel (.xlsx)
+                </button>
+                <button class="btn btn-secondary" id="download-ods-btn" type="button">
+                  📂 Descargar OpenDocument (.ods)
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
 
       </section>
 

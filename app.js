@@ -9,7 +9,19 @@ document.addEventListener('DOMContentLoaded', () => {
   let isProcessing = false;
   let processCancelled = false;
 
-  // DOM Elements
+  // H5P Import State
+  let h5pExtractedHeaders = [];
+  let h5pExtractedRows = [];
+
+  // Tab DOM Elements
+  const tabExcelH5p = document.getElementById('tab-excel-h5p');
+  const tabH5pExcel = document.getElementById('tab-h5p-excel');
+  const panelExcelH5p = document.getElementById('panel-excel-h5p');
+  const panelH5pExcel = document.getElementById('panel-h5p-excel');
+  const settingsExcelH5p = document.getElementById('settings-excel-h5p');
+  const settingsH5pExcel = document.getElementById('settings-h5p-excel');
+
+  // DOM Elements (Excel to H5P)
   const uploadZone = document.getElementById('upload-zone');
   const fileInput = document.getElementById('file-input');
   const fileInfoBox = document.getElementById('file-info-box');
@@ -26,6 +38,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const previewTableHeader = document.getElementById('preview-table-header');
   
   const generateBtn = document.getElementById('generate-btn');
+
+  // DOM Elements (H5P to Excel)
+  const h5pUploadZone = document.getElementById('h5p-upload-zone');
+  const h5pFileInput = document.getElementById('h5p-file-input');
+  const h5pFileInfoBox = document.getElementById('h5p-file-info-box');
+  const h5pFileNameDisplay = document.getElementById('h5p-file-name');
+  const h5pFileSizeDisplay = document.getElementById('h5p-file-size');
+  const h5pRemoveFileBtn = document.getElementById('h5p-remove-file-btn');
+  
+  const h5pPreviewStep = document.getElementById('h5p-preview-step');
+  const h5pPreviewTableHeader = document.getElementById('h5p-preview-table-header');
+  const h5pPreviewTableBody = document.getElementById('h5p-preview-table-body');
+  
+  const downloadExcelBtn = document.getElementById('download-excel-btn');
+  const downloadOdsBtn = document.getElementById('download-ods-btn');
   
   // Settings DOM
   const apiKeyInput = document.getElementById('api-key');
@@ -126,6 +153,64 @@ document.addEventListener('DOMContentLoaded', () => {
   generateBtn.addEventListener('click', () => {
     if (parsedRows.length === 0) return;
     startGeneration();
+  });
+
+  // Tab Navigation listeners
+  tabExcelH5p.addEventListener('click', () => {
+    tabExcelH5p.classList.add('active');
+    tabH5pExcel.classList.remove('active');
+    panelExcelH5p.classList.remove('hidden');
+    panelH5pExcel.classList.add('hidden');
+    settingsExcelH5p.classList.remove('hidden');
+    settingsH5pExcel.classList.add('hidden');
+  });
+
+  tabH5pExcel.addEventListener('click', () => {
+    tabH5pExcel.classList.add('active');
+    tabExcelH5p.classList.remove('active');
+    panelH5pExcel.classList.remove('hidden');
+    panelExcelH5p.classList.add('hidden');
+    settingsH5pExcel.classList.remove('hidden');
+    settingsExcelH5p.classList.add('hidden');
+  });
+
+  // H5P Drag and Drop listeners
+  h5pUploadZone.addEventListener('click', () => h5pFileInput.click());
+
+  h5pUploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    h5pUploadZone.classList.add('dragover');
+  });
+
+  h5pUploadZone.addEventListener('dragleave', () => {
+    h5pUploadZone.classList.remove('dragover');
+  });
+
+  h5pUploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    h5pUploadZone.classList.remove('dragover');
+    if (e.dataTransfer.files.length > 0) {
+      handleH5pFile(e.dataTransfer.files[0]);
+    }
+  });
+
+  h5pFileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      handleH5pFile(e.target.files[0]);
+    }
+  });
+
+  h5pRemoveFileBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    resetH5pApp();
+  });
+
+  downloadExcelBtn.addEventListener('click', () => {
+    exportToSpreadsheet(false);
+  });
+
+  downloadOdsBtn.addEventListener('click', () => {
+    exportToSpreadsheet(true);
   });
 
   // Load and save settings
@@ -345,6 +430,185 @@ document.addEventListener('DOMContentLoaded', () => {
     setupStep.classList.add('hidden');
     previewTableContainer.classList.add('hidden');
     generateBtn.disabled = true;
+  }
+
+  // Parse H5P or content.json file
+  function handleH5pFile(file) {
+    h5pFileNameDisplay.textContent = 'Analizando archivo H5P...';
+    h5pFileSizeDisplay.textContent = '';
+    h5pFileInfoBox.classList.remove('hidden');
+    h5pUploadZone.classList.add('hidden');
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      try {
+        let jsonContent = '';
+        const isJson = file.name.endsWith('.json');
+        
+        if (isJson) {
+          const textDecoder = new TextDecoder('utf-8');
+          jsonContent = textDecoder.decode(e.target.result);
+        } else {
+          // It's a zip/h5p file
+          const zip = await JSZip.loadAsync(e.target.result);
+          // Look for content/content.json or content.json in root
+          let contentFile = zip.file('content/content.json') || zip.file('content.json');
+          if (!contentFile) {
+            throw new Error('No se encontró el archivo content.json en el paquete H5P.');
+          }
+          jsonContent = await contentFile.async('text');
+        }
+
+        const data = JSON.parse(jsonContent);
+        if (!data.infoWall || !data.infoWall.panels) {
+          throw new Error('El archivo no parece ser una actividad H5P InfoWall válida.');
+        }
+
+        h5pFileNameDisplay.textContent = file.name;
+        h5pFileSizeDisplay.textContent = formatBytes(file.size);
+
+        processH5pData(data);
+
+      } catch (err) {
+        console.error(err);
+        alert(`Error al leer el archivo H5P: ${err.message}`);
+        resetH5pApp();
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+
+  // Process H5P InfoWall data and build row array
+  function processH5pData(data) {
+    const properties = data.infoWall.propertiesGroup.properties || [];
+    
+    // Extracted columns: "Nombre", properties labels, "Url"
+    h5pExtractedHeaders = ['Nombre'];
+    properties.forEach(p => {
+      h5pExtractedHeaders.push(p.label || 'Campo');
+    });
+    // Add "Url" column in case we parse links
+    h5pExtractedHeaders.push('Url');
+
+    h5pExtractedRows = [];
+    const panels = data.infoWall.panels || [];
+
+    panels.forEach(panel => {
+      const panelTitle = panel.panelTitle || '';
+      const entries = panel.entries || [];
+      
+      const row = {
+        'Nombre': panelTitle
+      };
+
+      let extractedUrl = '';
+
+      properties.forEach((prop, idx) => {
+        const label = prop.label || 'Campo';
+        let val = entries[idx] || '';
+
+        // If description column, check if it contains the URL link pattern
+        if (label.toLowerCase().includes('desc') && typeof val === 'string') {
+          // Check for link pattern: <br><br><a href='{url_link}' target='_blank'>🔗 Más información</a>
+          // We will use a regular expression to extract the URL and strip it from the description
+          const linkRegex = /<br\s*\/?>\s*<br\s*\/?>\s*<a\s+[^>]*href=['"]([^'"]+)['"][^>]*>🔗\s*Más\s+información<\/a>/i;
+          const match = val.match(linkRegex);
+          if (match) {
+            extractedUrl = match[1];
+            // Strip the link from the description text
+            val = val.replace(linkRegex, '').trim();
+          } else {
+            // Check for simpler link pattern: <a href='{url_link}' ...>...</a>
+            const simpleLinkRegex = /<a\s+[^>]*href=['"]([^'"]+)['"][^>]*>[^<]+<\/a>/i;
+            const simpleMatch = val.match(simpleLinkRegex);
+            if (simpleMatch) {
+              extractedUrl = simpleMatch[1];
+              // Strip simple link
+              val = val.replace(simpleLinkRegex, '').trim();
+            }
+          }
+        }
+
+        row[label] = val;
+      });
+
+      row['Url'] = extractedUrl;
+      h5pExtractedRows.push(row);
+    });
+
+    renderH5pPreview();
+    h5pPreviewStep.classList.remove('hidden');
+  }
+
+  // Render extracted H5P preview table
+  function renderH5pPreview() {
+    h5pPreviewTableHeader.innerHTML = '';
+    h5pPreviewTableBody.innerHTML = '';
+
+    // Add headers
+    h5pExtractedHeaders.forEach(header => {
+      const th = document.createElement('th');
+      th.textContent = header;
+      h5pPreviewTableHeader.appendChild(th);
+    });
+
+    // Add rows preview (max 5 rows)
+    const previewRows = h5pExtractedRows.slice(0, 5);
+    previewRows.forEach(row => {
+      const tr = document.createElement('tr');
+      h5pExtractedHeaders.forEach(header => {
+        const td = document.createElement('td');
+        td.textContent = row[header] || '';
+        tr.appendChild(td);
+      });
+      h5pPreviewTableBody.appendChild(tr);
+    });
+  }
+
+  // Reset H5P reverse mode
+  function resetH5pApp() {
+    h5pExtractedHeaders = [];
+    h5pExtractedRows = [];
+    h5pFileInput.value = '';
+    
+    h5pFileInfoBox.classList.add('hidden');
+    h5pUploadZone.classList.remove('hidden');
+    h5pPreviewStep.classList.add('hidden');
+  }
+
+  // Export extracted data to ODS / XLSX
+  function exportToSpreadsheet(isOds) {
+    if (h5pExtractedRows.length === 0) return;
+
+    try {
+      // Convert row objects to AOA (Array of Arrays)
+      const dataToExport = [h5pExtractedHeaders];
+      
+      h5pExtractedRows.forEach(row => {
+        const rowData = h5pExtractedHeaders.map(header => row[header] || '');
+        dataToExport.push(rowData);
+      });
+
+      const worksheet = XLSX.utils.aoa_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Inventario Extraido");
+
+      const fileType = isOds ? 'ods' : 'xlsx';
+      const output = XLSX.write(workbook, { bookType: fileType, type: 'array' });
+      
+      const mime = isOds 
+        ? 'application/vnd.oasis.opendocument.spreadsheet' 
+        : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      
+      const blob = new Blob([output], { type: mime });
+      saveAs(blob, `inventario_extraido.${fileType}`);
+      
+      showToast(`Exportación a ${fileType.toUpperCase()} completada.`);
+    } catch (err) {
+      console.error(err);
+      alert(`Error al exportar la hoja de cálculo: ${err.message}`);
+    }
   }
 
   // Toast message utility
