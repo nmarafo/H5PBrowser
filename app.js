@@ -495,7 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const panels = data.infoWall.panels || [];
 
     panels.forEach(panel => {
-      const panelTitle = panel.panelTitle || '';
+      const panelTitle = decodeHtmlEntities(panel.panelTitle || '');
       const entries = panel.entries || [];
       
       const row = {
@@ -530,10 +530,10 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        row[label] = val;
+        row[label] = decodeHtmlEntities(val);
       });
 
-      row['Url'] = extractedUrl;
+      row['Url'] = decodeHtmlEntities(extractedUrl);
       h5pExtractedRows.push(row);
     });
 
@@ -1076,6 +1076,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Scroll to bottom
     consoleBox.scrollTop = consoleBox.scrollHeight;
+  }
+
+  // Decode HTML entities (e.g. &quot; -> ", &amp; -> &) using a safe textarea element
+  function decodeHtmlEntities(str) {
+    if (!str || typeof str !== 'string') return str || '';
+    const txt = document.createElement('textarea');
+    txt.innerHTML = str;
+    return txt.value;
   }
 
   // Clean patterns from query string
